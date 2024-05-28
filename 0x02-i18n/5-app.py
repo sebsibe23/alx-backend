@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""A Basic Flask app with internationalization support.
+"""
+A Basic Flask app with internationalization support.
 """
 from flask_babel import Babel
 from typing import Union, Dict
@@ -7,7 +8,13 @@ from flask import Flask, render_template, request, g
 
 
 class Config:
-    """Represents a Flask Babel configuration.
+    """
+    Represents a Flask Babel configuration.
+
+    Attributes:
+    - LANGUAGES (list): Supported languages.
+    - BABEL_DEFAULT_LOCALE (str): Default locale.
+    - BABEL_DEFAULT_TIMEZONE (str): Default timezone.
     """
     LANGUAGES = ["en", "fr"]
     BABEL_DEFAULT_LOCALE = "en"
@@ -27,37 +34,70 @@ users = {
 
 
 def get_user() -> Union[Dict, None]:
-    """Retrieves a user based on a user id.
     """
-    login_id = request.args.get('login_as')
-    if login_id:
-        return users.get(int(login_id))
-    return None
+    Function: get_user
+    Description: Retrieves a user based on a user id
+    from the request arguments.
+    Returns:
+    - Union[Dict, None]: User dictionary if found, otherwise None.
+    """
+    try:
+        login_id = request.args.get('login_as')
+        if login_id:
+            return users.get(int(login_id))
+        return None
+    except Exception as e:
+        app.logger.error(f"An error occurred while retrieving user: {e}")
+        return None
 
 
 @app.before_request
 def before_request() -> None:
-    """Performs some routines before each request's resolution.
     """
-    user = get_user()
-    g.user = user
+    Function: before_request
+    Description: Performs routines before each request's resolution, such as
+    setting the user in the global context.
+    """
+    try:
+        user = get_user()
+        g.user = user
+    except Exception as e:
+        app.logger.error(f"An error occurred in before_request: {e}")
+        g.user = None
 
 
 @babel.localeselector
 def get_locale() -> str:
-    """Retrieves the locale for a web page.
     """
-    locale = request.args.get('locale', '')
-    if locale in app.config["LANGUAGES"]:
-        return locale
-    return request.accept_languages.best_match(app.config["LANGUAGES"])
+    Function: get_locale
+    Description: Retrieves the best match for the locale from the
+    request's Accept-Languages header or query parameter.
+    Returns:
+    - str: Best match locale from supported languages.
+    """
+    try:
+        locale = request.args.get('locale', '')
+        if locale in app.config["LANGUAGES"]:
+            return locale
+        return request.accept_languages.best_match(app.config["LANGUAGES"])
+    except Exception as e:
+        app.logger.error(f"An error occurred while selecting locale: {e}")
+        return app.config["BABEL_DEFAULT_LOCALE"]
 
 
 @app.route('/')
 def get_index() -> str:
-    """The home/index page.
     """
-    return render_template('5-index.html')
+    Function: get_index
+    Description: The home/index page route.
+    Returns:
+    - str: Rendered HTML template for the home page.
+    """
+    try:
+        return render_template('5-index.html')
+    except Exception as e:
+        app.logger.error(f"An error occurred while rendering the page: {e}")
+        return "An error occurred while rendering the page."
 
 
 if __name__ == '__main__':
